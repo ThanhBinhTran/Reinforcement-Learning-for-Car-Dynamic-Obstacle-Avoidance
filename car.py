@@ -1,3 +1,9 @@
+"""
+This is a part of the autonomous driving car project.
+This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
+author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
+"""
+
 from car_base import *
 import numpy as np
 from obstacles import *
