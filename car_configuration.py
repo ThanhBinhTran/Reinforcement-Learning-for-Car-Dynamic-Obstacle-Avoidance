@@ -12,7 +12,7 @@ LIDAR_PLUSES_PER_SECTOR=5    # number of laser pluses in a sector
 LIDAR_PLUSES = LIDAR_SECTORS*LIDAR_PLUSES_PER_SECTOR # total number of laser pluses
 
 ''' Back of the car vision '''
-BACK_VISION_LINES = 4
+BACK_VISION_LINES = 8
 BACK_VISION_SAFE_DISTANCE = 1   # safety distance for the back of the car
 
 ''' 

@@ -46,9 +46,8 @@ def on_press(event):
         car.vel = car.vel_MAX
     elif car.vel < car.vel_MAX:
         car.vel = car.vel_MAX
-
     
-
+    car.motion()
 
 class Plotter:
     def __init__(self, size=(7,7), title="Autonomous Robot"):
@@ -134,21 +133,43 @@ class Plotter:
     def plot_trajectory(self, robot:Car):
         self.plt.plot(robot.trajectory[:, 0] , robot.trajectory[:, 1], ":r")
 
+    ''' plot_bunch_of_line_segment, 1 point of linesegment is root center, others are ptsq'''
+    def plot_bunch_line_segment(self, robot:Car, pts, color='g', lw = 0.15):
+        pts_len = len(pts)
+        #print ("pts_len", pts_len)
+        if pts_len > 0:
+            center = np.array([robot.coordinate]*pts_len).reshape((pts_len,2))
+            self.plt.plot((center[:,0],pts[:,0]), (center[:,1],pts[:,1]), lw = lw, color=color)
+
     ''' plot lidar pluses vision'''
     def plot_Lidar(self, robot:Car):
-        center = np.array([robot.coordinate]*LIDAR_PLUSES).reshape((LIDAR_PLUSES,2))
-        self.plt.plot((center[:,0],robot.lidar_pluses[:,0]), (center[:,1],robot.lidar_pluses[:,1]), lw = 0.15)
+        distances = [point_dist(robot.coordinate, pt) for pt in robot.lidar_pluses]
+        distance_mask = np.array(distances)< robot.vision_range-EPSILON
+
+        # obstacles line segments
+        pts = robot.lidar_pluses[distance_mask]
+        self.plot_bunch_line_segment(robot=robot, pts=pts, color='red')
+        # free line sengments
+        pts = robot.lidar_pluses[np.logical_not(distance_mask)]
+        self.plot_bunch_line_segment(robot=robot, pts=pts, color='green')
         
         if show_lidar_vision:   # show lidar vision
             self.lidar_arc(robot=robot)
 
     ''' plot back vision '''
     def plot_back_vision(self, robot:Car):
-        center = np.array([robot.coordinate]*BACK_VISION_LINES).reshape((BACK_VISION_LINES,2))
-        self.plt.plot((center[:,0],robot.back_lines[:,0]), (center[:,1],robot.back_lines[:,1]), lw = 0.15)
+        distances = [point_dist(robot.coordinate, pt) for pt in robot.back_lines]
+        distance_mask = np.array(distances)< robot.back_range-EPSILON
+
+        # obstacles line segments
+        pts = robot.back_lines[distance_mask]
+        self.plot_bunch_line_segment(robot=robot, pts=pts, color='red')
+        # free line sengments
+        pts = robot.back_lines[np.logical_not(distance_mask)]
+        self.plot_bunch_line_segment(robot=robot, pts=pts, color='green')
         
-        if show_back_vision:   # show back vision
-            self.back_vision_arc(robot=robot)
+        #if show_back_vision:   # show back vision
+        #    self.back_vision_arc(robot=robot)
             
     def display_all(self, car:Car, obstacles:Obstacles, goal):
         self.clear()
@@ -178,11 +199,10 @@ if __name__ == '__main__':
     run_times = 0
     
     plotter.press_key()
-    while run_times <1:
-        car.motion()
+    while run_times >-1:
+        
         if dynamic_obstacles:
             obstacles.motion()
-        car.motion()
         car.get_state(obstacles=obstacles)
         
         plotter.display_all(car=car, obstacles=obstacles, goal=(9,9))

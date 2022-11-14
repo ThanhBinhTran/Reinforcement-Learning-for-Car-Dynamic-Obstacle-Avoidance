@@ -266,6 +266,15 @@ class Car (Car_base):
             self.vel = self.vel_MIN
         #print ("steer {0}, vel {1}".format(self.steer, self.vel))
         self.motion()
+        
+
+    def is_out_of_boundary(self):
+        return self.coordinate[0] < WORKING_SPACE_X_MIN or self.coordinate[0] > WORKING_SPACE_X_MAX or \
+        self.coordinate[1] < WORKING_SPACE_Y_MIN or self.coordinate[1] > WORKING_SPACE_Y_MAX
+    
+    def is_hit_obstacles(self, obstacles:Obstacles):
+        obs, _ = self.collision_detection(obstacles=obstacles)
+        return len (obs)> 0
 
 if __name__ == '__main__':
     obstacles = Obstacles()
