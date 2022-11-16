@@ -1,5 +1,5 @@
 """
-This is a part of the autonomous driving car project.
+This is a part of the autonomous car project.
 This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
 author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
 """
@@ -11,13 +11,21 @@ class RobotType(Enum):
     circle = 0
     rectangle = 1
 
+class Robot_mode(Enum):
+    learning = 0
+    running = 1
 
+class Robot_status(Enum):
+    none = 0
+    time_out = 1
+    hit_obstacles =2
+    out_of_boundary =3
 
 class Car_base:
     def __init__(self, vision_range=20, robot_type=RobotType.circle, robot_radius=0.2):
         self.vel_MAX =  5.0                              # [m/s]
         self.vel_MIN = -5.0                              # [m/s]
-        self.vel_resolution = 0.1                        # [m/s]
+        self.vel_resolution = 0.4                        # [m/s]
 
         self.steer_MAX = math.pi/4                       # max left yaw
         self.steer_MIN = -math.pi/4                      # max right yaw
@@ -31,11 +39,11 @@ class Car_base:
         self.vision_range = vision_range                    # the range of input vision
         self.vision_range_MAX_left = math.pi/4
         self.vision_range_MAX_right = math.pi/4
-        self.back_range = vision_range/2                    # the range of input vision
+        self.back_range = 1.5                               # the range of back vision
         self.back_range_MAX_left = math.pi/16
         self.back_range_MAX_right = math.pi/16
+        
         # if robot_type == RobotType.circle
-        # Also used to check if goal is reached in both types
         self.radius = robot_radius                          # [m] for collision check
 
         # if robot_type == RobotType.rectangle

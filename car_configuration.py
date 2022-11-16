@@ -1,5 +1,5 @@
 """
-This is a part of the autonomous driving car project.
+This is a part of the autonomous car project.
 This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
 author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
 """
@@ -30,7 +30,7 @@ YAW_STATE = 4
 BACK_VISION_STATE = 2
 
 ''' Obstacles number '''
-OBSTACLES_NUM = 30          # number of generated obstacles
+OBSTACLES_NUM = 10          # number of generated obstacles
 
 ''' Working space configuration '''
 WORKING_SPACE_X_MIN = 0

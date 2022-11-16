@@ -1,5 +1,5 @@
 """
-This is a part of the autonomous driving car project.
+This is a part of the autonomous car project.
 This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
 author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
 """

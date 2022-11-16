@@ -1,5 +1,5 @@
 """
-This is a part of the autonomous driving car project.
+This is a part of the autonomous car project.
 This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
 author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
 """
@@ -11,8 +11,10 @@ from car_plotter import *
 from car_configuration import *
 from math_lib import *
 
-import argparse
-
+import argparse             # for user input
+from result_class import *  # for record result
+import pickle               # for save/load object
+from datetime import datetime
 '''
 state = lidar , boundary x, boundary y , yaw, back vision
 action = combination of steer and velocity
@@ -27,7 +29,7 @@ NUMBER_OF_STATES = [DANGER_LEVEL+1]*LIDAR_SECTORS + [BOUNDARY_X_STATE, BOUNDARY_
 
 LEARNING_RATE = 0.2
 DISCOUNT = 0.90
-EPISODES = 25000
+EPISODES = 2500
 SHOW_EVERY = 1000
 
 
@@ -46,19 +48,22 @@ def calculate_reward(car:Car, obstacles:Obstacles, cost_to_goal, goal):
 
     return reward, done
 
-def RL_main(mode=None, car=Car, obstacles=Obstacles, plotter=Plotter, goal=None, q_table_name=None):
+def RL_main(mode:None, car:Car, obstacles:Obstacles, plotter:Plotter, goal:None, q_table_fname:None,\
+            run_times:int):
     reach_goal = False
     done = False
-    max_step = 1000
+    max_step = 100000
 
     # q table for reinforcement learning
     q_table = np.random.uniform(size=(NUMBER_OF_STATES + [NUMBER_OF_ACTIONS]) )
-
-    if mode == 'l': # learning mode
-
+    #q_table = np.zeros((NUMBER_OF_STATES + [NUMBER_OF_ACTIONS]) )
+    
+    if mode == Robot_mode.learning: # learning mode
         # start to train
         for episode in range(EPISODES):
             print ("Episode: ", episode)
+            
+            q_table_fname = "file_q_table_{0}".format(datetime.now().strftime("%m_%d_%H_%M_%S"))
 
             render = episode % SHOW_EVERY == 0
             
@@ -75,6 +80,9 @@ def RL_main(mode=None, car=Car, obstacles=Obstacles, plotter=Plotter, goal=None,
                 action = np.argmax(q_table[state])
                 # calculate distance for car to goal for later rewarding 
                 cost_to_goal = point_dist(car.coordinate, goal)
+
+                if dynamic_obstacles:
+                    obstacles.motion()
 
                 # car take action to move to new coordinate
                 car.take_action(action)
@@ -102,55 +110,99 @@ def RL_main(mode=None, car=Car, obstacles=Obstacles, plotter=Plotter, goal=None,
                     done = True
                 
 
-                if render:
+                if render and show_animation:
+                    plotter.display_all(car=car, obstacles=obstacles, goal=goal)
+            
+            if reach_goal:
+                obs_name = "file_obstacles_Reached_goal_{0}".format(datetime.now().strftime("%m_%d_%H_%M_%S"))
+                obstacles.save(obs_name)
+                # generate new obstacels relative infor to train for new knowledge
+                obstacles.generate()
+
+            if not show_animation and save_figure:
+                plotter.display_all(car=car, obstacles=obstacles, goal=goal)
+                plotter.save_figure(mode=mode, learning_rate=LEARNING_RATE, \
+                    episode=episode, number_of_obstacles=len(obstacles.obstacles))
+        np.save(q_table_fname, q_table)
+
+    elif mode == Robot_mode.running: # running mode
+        dtime = "11_15_23_20_13"
+        q_table = np.load("file_q_table_{0}.npy".format(dtime))
+        obstacles.load("file_obstacles_{0}.npz".format(dtime))
+        result_log = Result_Log()
+        reached_goal_stat = 0
+        for i in range (run_times):
+            result_item = []
+            car.reset()
+            if dynamic_obstacles:
+                obstacles.motion()
+            state = car.get_state(obstacles=obstacles)
+            
+            max_step = 1000
+            reach_goal = False
+            done = False
+
+            while not done:
+                max_step -= 1
+                # get current action
+                action = np.argmax(q_table[state])
+                
+                # car take action to move to new coordinate
+                car.take_action(action)
+                if dynamic_obstacles:
+                    obstacles.motion()
+                
+                
+
+                # get new state at new coordinate
+                state = car.get_state(obstacles=obstacles)
+            
+                if car.is_hit_obstacles(obstacles=obstacles) or car.is_out_of_boundary():
+                    done = True
+
+                if point_dist(car.coordinate, goal) < car.radius: # reach goal
+                    done = True
+                    reach_goal = True
+                
+                if max_step == 0 :
+                    car.car_status = Robot_status.time_out
+                    done = True
+
+                if show_animation:
                     plotter.display_all(car=car, obstacles=obstacles, goal=goal)
 
-            if reach_goal:
-                    break
-
-        np.save(Q_TALBE_FILE, q_table)
-
-    elif mode == 'r': # running mode
-        q_table = np.load(q_table_name)
-        car.reset()
-        state = car.get_state(obstacles=obstacles)
-        max_step = 500
-        while not done:
-            max_step -= 1
-            # get current action
-            action = np.argmax(q_table[state])
-            
-            # car take action to move to new coordinate
-            car.take_action(action)
-                
-            
-
-            # get new state at new coordinate
-            state = car.get_state(obstacles=obstacles)
-        
-            if car.is_hit_obstacles(obstacles=obstacles) or car.is_out_of_boundary():
-                done = True
-
-            if point_dist(car.coordinate, goal) < car.radius: # reach goal
-                done = True
-                reach_goal = True
-            
-            if max_step == 0 :
-                done = True
-            plotter.display_all(car=car, obstacles=obstacles, goal=goal)
+            if (reach_goal):
+                reached_goal_stat += 1
+                print ("congratulation for runtimes number ", i)
+                pickle.dump(obstacles, "obstacles{0}.obj".format(reached_goal_stat))
+            result_item.append(reach_goal)
+            result_item.append(car.car_status)
+            result_log.add_result(result=result_item)
+        result_log.write_csv("result_log.csv")
+        print ("reached_goal {0} out of {1}".format(reached_goal_stat, run_times))
     
     # display for the last
     plotter.display_all(car=car, obstacles=obstacles, goal=goal)
-    plotter.show()
+    if show_animation:
+        plotter.show()
     print ("DONE") 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Reinformance Learning for Dynamic Obstacles Avoidance.')
-    parser.add_argument('-m', metavar="running mode", type=str, help='running mode', default='r')
+    parser.add_argument('-m', metavar="running mode", type=str, help='running mode', default='l')
     parser.add_argument('-q', metavar="q talbe", type=str, help='running mode', default='q_table_car_OKIE.npy')
+    parser.add_argument('-n', metavar="run times for testing", type=int, help='run times for testing', default=1)
     args = parser.parse_args()
     mode = args.m
+    run_times = args.n
     q_table_name = args.q
+
+    if mode == 'l':
+        mode = Robot_mode.learning
+    elif mode == 'r':
+        mode = Robot_mode.running
+    else:
+        mode = Robot_mode.running
 
     # car, obstacles and plotter delaration
     car = Car()
@@ -159,4 +211,4 @@ if __name__ == '__main__':
     # declare the goal
     goal = np.array([6,9])
 
-    RL_main(mode=mode, car=car, obstacles=obstacles, plotter=plotter, goal=goal, q_table_name=q_table_name)
+    RL_main(mode=mode, car=car, obstacles=obstacles, plotter=plotter, goal=goal, q_table_fname=q_table_name, run_times=run_times)

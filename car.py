@@ -1,5 +1,5 @@
 """
-This is a part of the autonomous driving car project.
+This is a part of the autonomous car project.
 This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
 author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
 """
@@ -26,6 +26,7 @@ class Car (Car_base):
         self.vel = 0
         self.steer = 0
         self.trajectory = np.array([self.coordinate])
+        self.car_status = Robot_status.none
         #("car start at: ", self.coordinate, " with yaw ", math.degrees(self.yaw))
 
     ''' emit lidar '''
@@ -250,10 +251,8 @@ class Car (Car_base):
             print ("No predefined action")
 
         
-        self.steer += self.steer_resolution*steer_increase
-        self.vel += self.vel_resolution*vel_increase
-        #self.steer = steer_increase*math.pi/8
-        #self.vel = vel_increase
+        self.steer = self.steer_resolution*steer_increase
+        self.vel = self.vel_resolution*vel_increase
 
         if self.steer > self.steer_MAX:
             self.steer = self.steer_MAX
@@ -264,17 +263,21 @@ class Car (Car_base):
             self.vel = self.vel_MAX
         elif self.vel < self.vel_MIN:
             self.vel = self.vel_MIN
-        #print ("steer {0}, vel {1}".format(self.steer, self.vel))
+
         self.motion()
         
 
     def is_out_of_boundary(self):
+        self.car_status = Robot_status.out_of_boundary
         return self.coordinate[0] < WORKING_SPACE_X_MIN or self.coordinate[0] > WORKING_SPACE_X_MAX or \
         self.coordinate[1] < WORKING_SPACE_Y_MIN or self.coordinate[1] > WORKING_SPACE_Y_MAX
     
     def is_hit_obstacles(self, obstacles:Obstacles):
         obs, _ = self.collision_detection(obstacles=obstacles)
-        return len (obs)> 0
+        if len(obs)> 0:
+            self.car_status = Robot_status.hit_obstacles
+            return True
+        return False
 
 if __name__ == '__main__':
     obstacles = Obstacles()

@@ -1,5 +1,5 @@
 """
-This is a part of the autonomous driving car project.
+This is a part of the autonomous car project.
 This simulates how to apply Reinforcement Learning in dynamic obstacles avoidance for a self-driving car.
 author: Binh Tran Thanh / email:thanhbinh@hcmut.edu.vn or thanhbinh.hcmut@gmail.com
 """
@@ -188,6 +188,17 @@ class Plotter:
         self.obstacles_circle(obstacles=obstacles)
         self.obstacles_circle_collision(obstacles_coordinate=detected_collision, obstacles_radius=detected_collision_radius, ls="-", color='red')
         self.pause(0.1)
+
+    ''' save figure '''
+    def save_figure(self, mode:Robot_mode, learning_rate, episode, number_of_obstacles, dpi=300):
+        fig_name = "{0}_Episode{1}_LearningRate{1}_obstacles{1}".format(mode, episode, learning_rate,number_of_obstacles)
+        file_extension_pgf = ".pgf"
+        file_extension_png = ".png"
+        #plt.savefig(fig_name + file_extension_pgf, bbox_inches ="tight", dpi=dpi)
+        #print ("saved: {0}{1}".format(fig_name, file_extension_pgf))
+
+        plt.savefig(fig_name + file_extension_png, bbox_inches ="tight", dpi=dpi)
+        print ("saved: {0}{1}".format(fig_name, file_extension_png))
         
 if __name__ == '__main__':
     
