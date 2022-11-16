@@ -186,17 +186,24 @@ class Plotter:
         self.plot_back_vision(robot=car)
         self.plot_trajectory(robot=car)
         self.obstacles_circle(obstacles=obstacles)
-        self.obstacles_circle_collision(obstacles_coordinate=detected_collision, obstacles_radius=detected_collision_radius, ls="-", color='red')
+        self.obstacles_circle_collision(obstacles_coordinate=detected_collision, \
+                obstacles_radius=detected_collision_radius, ls="-", color='red')
         self.pause(0.1)
 
     ''' save figure '''
-    def save_figure(self, mode:Robot_mode, learning_rate, episode, number_of_obstacles, dpi=300):
-        fig_name = "{0}_Episode{1}_LearningRate{1}_obstacles{1}".format(mode, episode, learning_rate,number_of_obstacles)
-        file_extension_pgf = ".pgf"
-        file_extension_png = ".png"
+    def save_figure(self, mode:Robot_mode, learning_rate=None, episode=None, number_of_obstacles=None, \
+                runtimes=0, reach_goal=False, robot_status=Robot_status.none, dpi=300):
+        if mode == Robot_mode.learning:
+            fig_name = "Robot_Learning_Episode{0}_LearningRate{1}_Obstacles{2}".format(episode, learning_rate, number_of_obstacles)
+        elif mode == Robot_mode.running:
+            fig_name = "Robot_Running_times{0}_Reach_goal_{1}_{2}".format(runtimes, reach_goal, robot_status)
+
+        
+        #file_extension_pgf = ".pgf"
         #plt.savefig(fig_name + file_extension_pgf, bbox_inches ="tight", dpi=dpi)
         #print ("saved: {0}{1}".format(fig_name, file_extension_pgf))
 
+        file_extension_png = ".png"
         plt.savefig(fig_name + file_extension_png, bbox_inches ="tight", dpi=dpi)
         print ("saved: {0}{1}".format(fig_name, file_extension_png))
         

@@ -10,10 +10,10 @@ from car_configuration import *
 
 class Obstacles:
     def __init__(self) -> None:
-        self.generate()
+        self.new_data()
         self.dt = 0.1       # [s] Time tick for motion
 
-    def generate(self):
+    def new_data(self):
         self.obstacles = np.random.uniform(low=WORKING_SPACE_X_MIN + 3, high = WORKING_SPACE_X_MAX -1.5, size=(OBSTACLES_NUM,2))
         self.obstacles_radius = np.random.uniform(low=0.1, high = 0.2, size=(OBSTACLES_NUM,1))
         self.obstacles_velocity = np.random.uniform(low=0, high = 1, size=(OBSTACLES_NUM,1))
@@ -33,6 +33,7 @@ class Obstacles:
         
         self.obstacles += boundary_MIN*np.array([X_SPACE,Y_SPACE])
         self.obstacles -= boundary_MAX*np.array([X_SPACE,Y_SPACE])
+
     def save(self, file_name):
         np.savez(file_name, self.obstacles, self.obstacles_radius, self.obstacles_velocity, self.obstacles_yaw)
     

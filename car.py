@@ -26,8 +26,23 @@ class Car (Car_base):
         self.vel = 0
         self.steer = 0
         self.trajectory = np.array([self.coordinate])
-        self.car_status = Robot_status.none
+        self.status = Robot_status.none
+        self.reach_goal = False
+        self.max_step = 1000
+
         #("car start at: ", self.coordinate, " with yaw ", math.degrees(self.yaw))
+
+    def set_reach_goal(self):
+        self.reach_goal = True
+
+    def time_out(self):
+        ''' max step would be decreased by 1 every action was taken '''
+        self.status = Robot_status.time_out
+        return self.max_step == 0
+
+    def is_reach_goal(self, goal):  # goal is inside car radius area
+        self.reach_goal = point_dist(self.coordinate, goal) < self.radius
+        return self.reach_goal
 
     ''' emit lidar '''
     def lidar_start(self):
@@ -227,6 +242,8 @@ class Car (Car_base):
         #print ("yaw {0}, cooordinate {1}".format(math.degrees(self.yaw), self.trajectory))
 
     def take_action(self, action):
+        self.max_step -= 1
+
         steer_increase = 0
         vel_increase = 0
         if action == 0:
@@ -268,14 +285,14 @@ class Car (Car_base):
         
 
     def is_out_of_boundary(self):
-        self.car_status = Robot_status.out_of_boundary
+        self.status = Robot_status.out_of_boundary
         return self.coordinate[0] < WORKING_SPACE_X_MIN or self.coordinate[0] > WORKING_SPACE_X_MAX or \
         self.coordinate[1] < WORKING_SPACE_Y_MIN or self.coordinate[1] > WORKING_SPACE_Y_MAX
     
     def is_hit_obstacles(self, obstacles:Obstacles):
         obs, _ = self.collision_detection(obstacles=obstacles)
         if len(obs)> 0:
-            self.car_status = Robot_status.hit_obstacles
+            self.status = Robot_status.hit_obstacles
             return True
         return False
 
